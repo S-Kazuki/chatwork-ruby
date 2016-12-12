@@ -6,6 +6,9 @@ module ChatWork
       # HTTP status 204 don't have body.
       return APIError.new(status, "") if status == 204
 
+      # Too Many Requests Error
+      return APIError.new(status, "") if status == 429
+
       hash =
         begin
           JSON.load(body)
