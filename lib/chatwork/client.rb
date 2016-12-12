@@ -18,11 +18,13 @@ module ChatWork
 
     def handle_response(response)
       case response.status
-      when 204
-        ChatWork::ChatWorkError.from_response(response.status, response.body)
+      when 429 # Too many requests error
+        return ChatWork::ChatWorkError.from_response(response.status, response.body), response.headers['x-ratelimit-remaining']
+      when 204 # New messages don't exist
+        return ChatWork::ChatWorkError.from_response(response.status, response.body), response.headers['x-ratelimit-remaining']
       when 200..299
         begin
-          JSON.parse(response.body)
+          return JSON.parse(response.body), response.headers['x-ratelimit-remaining']
         rescue JSON::ParserError => e
           raise ChatWork::APIConnectionError.new("Response JSON is broken. #{e.message}: #{response.body}", e)
         end
